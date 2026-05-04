@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>loooped - High School, Varsity, Dating</title>
+<link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogImxvb29wZWQgLSBIaWdoIFNjaG9vbCwgVmFyc2l0eSwgRGF0aW5nIiwKICAic2hvcnRfbmFtZSI6ICJsb29vcGVkIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwMDAwMDAiLAogICJ0aGVtZV9jb2xvciI6ICIjRkYwMDUwIiwKICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiLAogICJpY29ucyI6IFt7InNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby81MTJ4NTEyLzAwMDAwMC9GRjAwNTA/cGV4dD1Mb29vcGVkIiwgInNpemVzIjogIjUxMng1MTIiLCAidHlwZSI6ICJpbWFnZS9wbmciIH1dCn0=">
+<meta name="theme-color" content="#FF0050">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{background:#000;color:#fff;max-width:500px;margin:0 auto;height:100vh;overflow:hidden}
+.screen{display:none;height:100vh;overflow-y:auto}.screen.active{display:block}
+.header{position:fixed;top:0;width:100%;max-width:500px;background:#000;z-index:10;border-bottom:1px solid #222}
+.tabs{display:flex;justify-content:space-around;padding:12px 0}
+.tab{color:#888;font-weight:600;font-size:13px;cursor:pointer}.tab.active{color:#fff;border-bottom:2px solid #FF0050}
+.topics{display:flex;gap:8px;padding:8px 12px;overflow-x:auto}
+.topic{background:#222;padding:6px 12px;border-radius:16px;font-size:12px;white-space:nowrap;cursor:pointer}.topic.active{background:#FF0050}
+.feed{margin-top:110px;height:calc(100vh - 170px);overflow-y:scroll;scroll-snap-type:y mandatory}
+.post{height:calc(100vh - 170px);scroll-snap-align:start;position:relative;display:flex;align-items:center;justify-content:center;background:#111}
+.post video,.post img{width:100%;height:100%;object-fit:cover}
+.post-info{position:absolute;bottom:80px;left:12px;right:70px}
+.badge-tag{background:#FF0050;display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;margin-bottom:6px;margin-right:4px}
+.badge-tag.school{background:#00C853}.badge-tag.uni{background:#2962FF}.badge-tag.anon{background:#616161}
+.actions{position:absolute;right:12px;bottom:80px;display:flex;flex-direction:column;gap:16px;align-items:center}
+.action{cursor:pointer;text-align:center}.action span{font-size:22px}.action p{font-size:10px;margin-top:4px}
+.nav{position:fixed;bottom:0;width:100%;max-width:500px;background:#000;display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #222}
+.nav-btn{font-size:24px;cursor:pointer;position:relative}
+.notif{position:absolute;top:-5px;right:-5px;background:#FF0050;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center}
+input,textarea,select,button{width:100%;background:#222;border:none;color:#fff;padding:12px;margin:8px 0;border-radius:8px}
+button{background:#FF0050;font-weight:600;cursor:pointer}button.secondary{background:#333}button.green{background:#00C853}button.red{background:#D50000}
+.center-box{padding:40px 20px;text-align:center;margin-top:20vh}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:30;padding:20px;overflow-y:auto}.modal.active{display:block}
+.list-item{padding:14px 12px;border-bottom:1px solid #222;display:flex;justify-content:space-between;align-items:center}
+.pill{background:#333;padding:4px 10px;border-radius:12px;font-size:12px}.pill.accept{background:#00C853}.pill.match{background:#FF0050}
+.match-popup{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#FF0050,#FF1744);padding:30px;border-radius:20px;text-align:center;z-index:50;animation:pop 0.3s;width:80%;max-width:300px}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(0.5)}100%{transform:translate(-50%,-50%) scale(1)}}
+.chat-box{height:calc(100vh - 260px);overflow-y:auto;padding:12px}
+.msg{margin:8px 0;max-width:75%;padding:8px 12px;border-radius:16px;font-size:14px;word-wrap:break-word}
+.msg.me{background:#FF0050;margin-left:auto}.msg.them{background:#222}
+.age-gate{background:#1a1a1a;padding:20px;border-radius:12px;margin:20px 0;border:2px solid #FF0050}
+.call-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center}.call-screen.active{display:flex}
+.call-video{width:100%;max-width:500px;height:70vh;background:#111;position:relative}.call-video video{width:100%;height:100%;object-fit:cover}
+.call-video-local{position:absolute;top:20px;right:20px;width:100px;height:150px;background:#222;border-radius:12px;overflow:hidden}.call-video-local video{width:100%;height:100%;object-fit:cover}
+.call-controls{display:flex;gap:20px;margin-top:30px}.call-btn{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer}
+.caller-info{text-align:center;margin-bottom:30px}.ringing{animation:pulse 1.5s infinite}
+@keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
+.heat-card{background:#1a1a1a;padding:16px;border-radius:12px;margin:8px 0;border-left:4px solid #FF0050}
+.heat-number{font-size:32px;font-weight:700;color:#FF0050}.heat-label{font-size:12px;color:#888;text-transform:uppercase}
+.heat-bar{height:6px;background:#222;border-radius:3px;margin-top:8px;overflow:hidden}.heat-fill{height:100%;background:linear-gradient(90deg,#FF0050,#FF1744);width:0%;transition:width 0.5s}
+.school-row{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#111;border-radius:8px;margin:6px 0}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="screen active">
+  <div class="center-box">
+    <h1>loooped</h1>
+    <p>Get looped in with school, varsity, dating & friends 🇿🇦🌍</p>
+    <div class="age-gate">
+      <h3>13+ Only</h3>
+      <input id="dob" type="date" max="2013-05-03">
+      <select id="schoolType">
+        <option value="">I am a...</option>
+        <option value="highschool">High School Learner</option>
+        <option value="university">University Student</option>
+        <option value="youngadult">Young Adult 18-25</option>
+      </select>
+      <input id="schoolName" placeholder="School/University name">
+    </div>
+    <button onclick="loginGoogle()">Continue with Google</button>
+    <input id="email" placeholder="Email - use school email for badge">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="loginEmail()">Sign Up / Login</button>
+    <p style="font-size:11px;color:#888;margin-top:20px">By continuing you agree to our <a href="/privacy.html" style="color:#FF0050">Privacy Policy</a>. Crushes are private. POPIA compliant.</p>
+  </div>
+</div>
+
+<div id="appScreen" class="screen">
+  <div class="header">
+    <div class="tabs">
+      <div class="tab active" onclick="setScope('foryou')">For You</div>
+      <div class="tab" onclick="setScope('friends')">Loop 👥</div>
+      <div class="tab" onclick="setScope('campus')">My School</div>
+      <div class="tab" onclick="setScope('heatmap')">Heatmap 🔥</div>
+      <div class="tab" onclick="setScope('national')">SA</div>
+    </div>
+    <div class="topics">
+      <div class="topic active" onclick="setTopic('all')">All</div>
+      <div class="topic" onclick="setTopic('highschool')">High School</div>
+      <div class="topic" onclick="setTopic('university')">University</div>
+      <div class="topic" onclick="setTopic('dating')">Dating</div>
+      <div class="topic" onclick="setTopic('confession')">Confessions</div>
+    </div>
+  </div>
+  <div class="feed" id="feed"></div>
+  <div class="nav">
+    <div class="nav-btn" onclick="showScreen('appScreen')">🏠</div>
+    <div class="nav-btn" onclick="openUpload()">➕</div>
+    <div class="nav-btn" onclick="showScreen('crushScreen');loadCrushes()">💘<div class="notif" id="crushNotif" style="display:none">0</div></div>
+    <div class="nav-btn" onclick="showScreen('dmScreen');loadDMList()">💬<div class="notif" id="dmNotif" style="display:none">0</div></div>
+    <div class="nav-btn" onclick="showScreen('studyGroupsScreen');loadStudyGroups()">📚</div>
+    <div class="nav-btn" onclick="showScreen('profileScreen')">👤</div>
+  </div>
+</div>
+
+<div id="uploadScreen" class="modal"><h2>Post</h2><input type="file" id="mediaFile" accept="video/*,image/*"><textarea id="caption" placeholder="What's happening? #matric #dating"></textarea><select id="scopeSelect"><option value="friends">Loop Only</option><option value="campus">My School</option><option value="national">South Africa</option><option value="international">Global</option></select><select id="topicSelect"><option value="highschool">High School</option><option value="university">University</option><option value="dating">Dating</option><option value="confession">Anonymous Confession</option></select><button onclick="uploadPost()">Post</button><button class="secondary" onclick="closeModal('uploadScreen')">Cancel</button><p id="uploadStatus"></p></div>
+
+<div id="crushScreen" class="screen"><div style="padding:20px"><h2>Crushes 💘</h2><p style="font-size:12px;color:#888">Mutual crushes = looooped + Loop Call unlocked</p><h3 style="margin-top:20px">Loooped</h3><div id="matchList"></div><h3 style="margin-top:20px">loooped Friday</h3><p style="font-size:12px;color:#888">Every Friday 6pm, we reveal who wanted to loop with you 👀</p><div id="shotList"></div></div></div>
+
+<div id="dmScreen" class="screen"><div style="padding:20px"><h2>Messages</h2><input id="newChatEmail" placeholder="Start chat with email"><button onclick="startNewChat()">New Chat</button><div id="dmList" style="margin-top:20px"></div></div></div>
+
+<div id="chatScreen" class="modal"><div style="display:flex;justify-content:space-between;align-items:center"><h3 id="chatWithName">Chat</h3><button style="width:auto;padding:8px 16px" onclick="startCall('video')">📹 Loop Call</button></div><div class="chat-box" id="chatBox"></div><div style="display:flex;gap:8px"><input id="chatInput" placeholder="Message..." style="flex:1"><button onclick="startRecording()" style="width:auto;padding:12px" id="recordBtn">🎤</button></div><button onclick="sendMessage()">Send</button><button class="secondary" onclick="closeModal('chatScreen')">Back</button></div>
+
+<div id="callScreen" class="call-screen"><div class="caller-info"><h2 id="callName">Loop Call</h2><p id="callStatus" class="ringing">Calling...</p></div><div class="call-video"><video id="remoteVideo" autoplay playsinline></video><div class="call-video-local"><video id="localVideo" autoplay playsinline muted></video></div></div><div class="call-controls"><div class="call-btn secondary" onclick="toggleMute()">🎤</div><div class="call-btn red" onclick="endCall()">📞</div><div class="call-btn secondary" onclick="toggleVideo()">📹</div></div></div>
+
+<div id="incomingCallModal" class="modal" style="z-index:45"><div class="center-box"><h2>Loop Call Incoming</h2><p id="incomingCallName">@user is calling you</p><button class="green" onclick="acceptCall()">Accept</button><button class="red" onclick="declineCall()">Decline</button></div></div>
+
+<div id="profileScreen" class="screen"><div style="padding:20px;text-align:center;border-bottom:1px solid #222"><h2 id="profileName">@you</h2><p id="profileBadge"></p><button onclick="showScreen('friendsScreen');loadFriends()">Your Loop</button><button class="secondary" onclick="logout()">Logout</button><button class="red" onclick="deleteAccount()">Delete Account + All Data</button></div></div>
+
+<div id="friendsScreen" class="modal"><h2>Your Loop 👥</h2><input id="friendEmail" placeholder="Add friend by email"><button onclick="sendFriendRequest()">Send Request</button><h3 style="margin-top:20px">Requests</h3><div id="friendRequests"></div><h3 style="margin-top:20px">Loop Members</h3><div id="friendList"></div><button class="secondary" onclick="closeModal('friendsScreen')">Close</button></div>
+
+<div id="studyGroupsScreen" class="screen"><div style="padding:20px"><h2>Study Loops 📚</h2><button onclick="openModal('createGroupModal')">+ Create Loop</button><div id="studyGroupsList" style="margin-top:20px"></div></div></div>
+
+<div id="createGroupModal" class="modal"><h2>New Study Loop</h2><input id="groupName" placeholder="Group name: Matric Maths 2026"><select id="groupType"><option value="highschool">High School</option><option value="university">University</option></select><input id="groupSubject" placeholder="Subject: Maths, History, Physics"><textarea id="groupDesc" placeholder="Share past papers + help each other"></textarea><label style="font-size:12px;color:#888"><input type="checkbox" id="groupPrivate" style="width:auto"> Private - Invite only</label><button onclick="createStudyGroup()">Create</button><button class="secondary" onclick="closeModal('createGroupModal')">Cancel</button></div>
+
+<div id="groupScreen" class="modal"><div style="display:flex;justify-content:space-between;align-items:center"><h3 id="groupScreenName">Group</h3><button style="width:auto;padding:8px 16px" onclick="openModal('uploadNoteModal')">📎 Upload</button></div><div class="chat-box" id="groupChatBox" style="height:calc(100vh - 280px)"></div><input id="groupChatInput" placeholder="Ask a question..."><button onclick="sendGroupMessage()">Send</button><button class="secondary" onclick="closeModal('groupScreen')">Back</button></div>
+
+<div id="uploadNoteModal" class="modal"><h3>Upload Notes/File</h3><input type="file" id="noteFile" accept="image/*,application/pdf,audio/*"><input id="noteTitle" placeholder="Title: Chapter 3 Summary"><button onclick="uploadNote()">Upload to Loop</button><button class="secondary" onclick="closeModal('uploadNoteModal')">Cancel</button></div>
+
+<div id="heatmapScreen" class="screen"><div style="padding:20px"><h2>Campus Heatmap 🔥</h2><p style="font-size:12px;color:#888">See where people are getting looooped. No names until you match.</p><div style="margin:20px 0"><select id="heatmapFilter" onchange="loadHeatmap()"><option value="today">Today</option><option value="week">This Week</option><option value="all">All Time</option></select></div><h3>Your School</h3><div id="mySchoolHeat" class="heat-card"></div><h3 style="margin-top:30px">Top Schools Right Now</h3><div id="topSchoolsHeat"></div><h3 style="margin-top:30px">Trending Topics</h3><div id="trendingTopics"></div></div></div>
+
+<script>
+// 1. PASTE YOUR FIREBASE CONFIG HERE FROM FIREBASE CONSOLE
+const firebaseConfig = {
+  apiKey: "REPLACE_ME",
+  authDomain: "REPLACE_ME.firebaseapp.com",
+  projectId: "REPLACE_ME",
+  storageBucket: "REPLACE_ME.appspot.com",
+  messagingSenderId: "REPLACE_ME",
+  appId: "REPLACE_ME"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+const messaging = firebase.messaging();
+
+let currentUser = null, userData = {}, currentScope = 'foryou', currentTopic = 'all', activeChatId = null, activeChatUser = null, activeChatUserId = null, friendIds = [], crushIds = [], matchIds = [], activeGroupId = null;
+let localStream = null, remoteStream = null, peerConnection = null, currentCallId = null, isCaller = false, isMuted = false, isVideoOff = false, mediaRecorder, audioChunks = [];
+const servers = {iceServers: [{urls: ['stun:stun1.l.google.com:19302','stun:stun2.l.google.com:19302']}]};
+
+// PWA
+if('serviceWorker' in navigator){navigator.serviceWorker.register(URL.createObjectURL(new Blob([`const CACHE='loooped-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/']))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));self.addEventListener('push',e=>{const d=e.data.json();e.waitUntil(self.registration.showNotification(d.title,{body:d.body,icon:'https://placehold.co/192x192/000000/FF0050?text=L'}))});self.addEventListener('notificationclick',e=>{e.notification.close();e.waitUntil(clients.openWindow('/'))});`],{type:'text/javascript'})))}
+
+// AUTH
+auth.onAuthStateChanged(async user=>{
+  if(user){
+    currentUser=user;
+    const userDoc=await db.collection('users').doc(user.uid).get();
+    userData=userDoc.exists?userDoc.data():{};
+    if(!userDoc.exists){
+      const dob=document.getElementById('dob').value;
+      const schoolType=document.getElementById('schoolType').value;
+      const schoolName=document.getElementById('schoolName').value;
+      const age=new Date().getFullYear()-new Date(dob).getFullYear();
+      if(age<13){alert('You must be 13+');auth.signOut();return;}
+      userData={email:user.email,displayName:user.displayName||user.email.split('@')[0],dob,schoolType,schoolName,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+      await db.collection('users').doc(user.uid).set(userData);
+      checkSchoolVerification(user.email);
+    }
+    document.getElementById('profileName').innerText='@'+userData.displayName;
+    document.getElementById('profileBadge').innerHTML=getBadgeHTML(userData);
+    if('Notification' in window && Notification.permission==='default') Notification.requestPermission().then(async p=>{if(p==='granted'){const t=await messaging.getToken({vapidKey:'REPLACE_WITH_YOUR_VAPID_KEY'});await db.collection('users').doc(user.uid).update({fcmToken:t})}});
+    loadSocialData();listenForCalls();loadShootYourShots();showScreen('appScreen');loadFeed();
+  }else{showScreen('loginScreen')}
+});
+
+function getBadgeHTML(u){if(u.schoolType==='university')return'<span class="badge-tag uni">🎓 '+(u.schoolName||'Uni')+'</span>';if(u.schoolType==='highschool')return'<span class="badge-tag school">🏫 '+(u.schoolName||'High School')+'</span>';return'<span class="badge-tag">Young Adult</span>'}
+function loginGoogle(){const dob=document.getElementById('dob').value;if(!dob||new Date().getFullYear()-new Date(dob).getFullYear()<13)return alert('Must be 13+');auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())}
+function loginEmail(){const dob=document.getElementById('dob').value;if(!dob||new Date().getFullYear()-new Date(dob).getFullYear()<13)return alert('Must be 13+');const email=document.getElementById('email').value;const pw=document.getElementById('password').value;auth.signInWithEmailAndPassword(email,pw).catch(e=>{if(e.code==='auth/user-not-found')auth.createUserWithEmailAndPassword(email,pw);else alert(e.message)})}
+function logout(){auth.signOut()}
+async function deleteAccount(){if(confirm('Delete everything? This cannot be undone.')){await db.collection('users').doc(currentUser.uid).delete();await auth.currentUser.delete();alert('Account deleted. You are now un-loooped.')}}
+async function checkSchoolVerification(email){const domain=email.split('@')[1];const schools={'up.ac.za':'University of Pretoria','uct.ac.za':'UCT','wits.ac.za':'Wits','parklands.co.za':'Parklands College'};if(schools[domain]){await db.collection('users').doc(currentUser.uid).update({verified:true,schoolName:schools[domain],schoolBadge:domain.includes('.ac.za')?'uni':'school'})}}
+
+// SOCIAL DATA
+function loadSocialData(){
+  db.collection('friends').where('users','array-contains',currentUser.uid).where('status','==','accepted').onSnapshot(snap=>friendIds=snap.docs.map(d=>d.data().users.find(u=>u!==currentUser.uid)));
+  db.collection('crushes').where('from','==',currentUser.uid).onSnapshot(snap=>crushIds=snap.docs.map(d=>d.data().to));
+  db.collection('crushes').where('to','==',currentUser.uid).onSnapshot(async snap=>{matchIds=[];for(let doc of snap.docs){const 
